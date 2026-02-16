@@ -1,0 +1,40 @@
+# Day 5 — Full stack: app + PostgreSQL + MongoDB + Redis
+# Run: docker-compose up --build
+# API: http://localhost:8000  Docs: http://localhost:8000/docs
+
+services:
+  app:
+    build: .
+    ports: ["8000:8000"]
+    depends_on: [postgres, mongodb, redis]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/postgres
+      MONGODB_URL: mongodb://mongodb:27017
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-prod}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    env_file: .env
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports: ["5432:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+
+  mongodb:
+    image: mongo:7
+    ports: ["27017:27017"]
+    volumes: ["mongo_data:/data/db"]
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    volumes: ["redis_data:/data"]
+
+volumes:
+  postgres_data: {}
+  mongo_data: {}
+  redis_data: {}

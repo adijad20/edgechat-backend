@@ -1,0 +1,57 @@
+# Day 5 — CI: lint (ruff), test (pytest + service containers), Docker build
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install ruff
+      - run: ruff check . --output-format=github
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: [5432/tcp]
+      mongodb:
+        image: mongo:7
+        ports: [27017/tcp]
+      redis:
+        image: redis:7-alpine
+        ports: [6379/tcp]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: pytest -v
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/postgres
+          MONGODB_URL: mongodb://localhost:27017
+          REDIS_URL: redis://localhost:6379/0
+          JWT_SECRET: test-secret-ci
+          GEMINI_API_KEY: test-key
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-docker-buildx@v3
+      - run: docker build -t edgechat-backend:ci .

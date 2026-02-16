@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CORS test</title>
+</head>
+<body>
+  <h1>CORS test</h1>
+  <p>Open this file from a different origin than the API (e.g. file:// or localhost:3000) and click the button.</p>
+  <button id="btn">Call API at http://localhost:8000</button>
+  <pre id="out">(click the button)</pre>
+
+  <script>
+    document.getElementById('btn').onclick = async () => {
+      const out = document.getElementById('out');
+      try {
+        const r = await fetch('http://localhost:8000/');
+        const data = await r.json();
+        out.textContent = 'OK: ' + JSON.stringify(data, null, 2);
+      } catch (e) {
+        out.textContent = 'Error (often CORS): ' + e.message;
+      }
+    };
+  </script>
+</body>
+</html>

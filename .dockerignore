@@ -1,0 +1,11 @@
+# Day 5 — Keep image small
+venv
+.env
+.git
+__pycache__
+*.pyc
+.pytest_cache
+.coverage
+htmlcov
+*.md
+.github

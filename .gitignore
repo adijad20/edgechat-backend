@@ -1,0 +1,30 @@
+# Dependencies and env
+venv/
+.venv/
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# Scratch / untitled editor files
+Untitled
+Untitled*
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Optional: uncomment if you want to keep test DB config out of git
+# .env.test
