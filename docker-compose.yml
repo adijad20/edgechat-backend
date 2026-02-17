@@ -31,7 +31,8 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports: ["6379:6379"]
+    # Use 16379 on host (Windows often blocks 6379/6380); container still uses 6379
+    ports: ["16379:6379"]
     volumes: ["redis_data:/data"]
 
 volumes:

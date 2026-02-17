@@ -1,13 +1,13 @@
 """
 Day 5 — Test fixtures. Set test env before app is imported.
-Tests always use fixed DB/Redis URLs (same as docker-compose and CI) so they
-pass regardless of what's in .env. Start Postgres/Mongo/Redis with:
-  docker-compose up -d postgres mongodb redis
+Tests always use fixed DB/Redis URLs (same as docker-compose and CI).
+Start Postgres/Mongo/Redis with: docker-compose up -d postgres mongodb redis
 """
+# ruff: noqa: E402  (env must be set before importing app)
 import os
 from pathlib import Path
 
-# MUST run before any app import so Settings() reads these values
+# MUST run before any app import — Settings() is created when app is imported
 _project_root = Path(__file__).resolve().parent.parent
 _env = _project_root / ".env"
 if _env.exists():
@@ -17,11 +17,9 @@ _env_test = _project_root / ".env.test"
 if _env_test.exists():
     from dotenv import load_dotenv
     load_dotenv(_env_test)
-
-# Force test DB URLs (overwrite .env) so tests use docker-compose/CI credentials
 os.environ["DATABASE_URL"] = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
 os.environ["MONGODB_URL"] = "mongodb://localhost:27017"
-os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+os.environ["REDIS_URL"] = "redis://localhost:16379/0"
 os.environ.setdefault("JWT_SECRET", "test-secret-do-not-use-in-prod")
 os.environ.setdefault("GEMINI_API_KEY", "test-key")
 os.environ["RATE_LIMIT_REQUESTS"] = "10000"
@@ -32,6 +30,8 @@ import httpx
 from httpx import ASGITransport
 
 from app.main import app
+
+
 
 
 

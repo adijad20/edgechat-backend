@@ -55,7 +55,7 @@ Tests talk to PostgreSQL, MongoDB, and Redis on **localhost** (same URLs as in `
    pytest -v
    ```
    - You should see unit tests (`test_security.py`) and integration tests (`test_auth_api.py`, `test_health.py`, `test_ai_api.py`, `test_chat_api.py`) run and pass.
-   - If something fails, check that Postgres, Mongo, and Redis are reachable on `localhost:5432`, `localhost:27017`, `localhost:6379` (no firewall blocking).
+   - If something fails, check that Postgres, Mongo, and Redis are reachable on `localhost:5432`, `localhost:27017`, `localhost:16379` (Redis uses 16379 on host to avoid Windows reserved ports).
 
 **If you see `InvalidPasswordError` or Mongo/health 503:**  
 Tests load your project **`.env`** first (the same file used when you run `uvicorn`), so they use the same `DATABASE_URL`, `MONGODB_URL`, and `REDIS_URL` as the rest of the project. If tests still fail, check that `.env` exists and has the correct URLs and that Postgres/Mongo/Redis are running.
