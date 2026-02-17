@@ -41,6 +41,25 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
+      - name: Wait for Postgres, Mongo, Redis
+        run: |
+          python -c "
+          import socket, time
+          for port in [5432, 27017, 6379]:
+              for _ in range(60):
+                  try:
+                      s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                      s.settimeout(2)
+                      s.connect(('127.0.0.1', port))
+                      s.close()
+                      print(f'Port {port} ready')
+                      break
+                  except (socket.error, OSError):
+                      time.sleep(1)
+              else:
+                  raise SystemExit(f'Port {port} not ready after 60s')
+          print('All services ready')
+          "
       - run: pytest -v
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/postgres
