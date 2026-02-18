@@ -16,8 +16,8 @@ from app.dependencies import SessionDep, engine
 from app.models import Base
 from app.api.v1 import auth as auth_router, ai as ai_router, chat as chat_router, usage as usage_router
 from app.middleware import RequestIDMiddleware, RateLimitMiddleware, UsageLogMiddleware, REQUEST_ID_HEADER
-from app.core.redis_client import init_redis, close_redis
-from app.core.mongo import init_mongo, close_mongo
+from app.core.redis_client import init_redis, close_redis, get_redis
+from app.core.mongo import init_mongo, close_mongo, get_database
 
 # Lifespan: create tables on startup, init Redis (Step 6), dispose on shutdown
 @asynccontextmanager
@@ -91,21 +91,67 @@ app.include_router(usage_router.router, prefix="/api/v1")
 
 @app.get("/")
 def root():
-    """Step 0–1: app name from config."""
+    """Root: app name from config."""
     return {"status": "ok", "app": settings.APP_NAME}
+
+
+# --- Health (Day 6: liveness vs readiness) ---
+
+@app.get("/api/v1/health")
+def health_liveness():
+    """Liveness probe: is the process up? Use for orchestrator (e.g. Kubernetes)."""
+    return {"status": "ok"}
+
+
+@app.get("/api/v1/health/ready")
+async def health_ready(session: SessionDep):
+    """
+    Readiness probe: can we serve traffic? Checks PostgreSQL, MongoDB, Redis.
+    Returns 503 if any dependency is down so load balancers don't send traffic.
+    """
+    checks = {}
+    try:
+        await session.execute(text("SELECT 1"))
+        checks["database"] = "connected"
+    except Exception:
+        checks["database"] = "error"
+    try:
+        db = get_database()
+        if db is None:
+            checks["mongo"] = "not initialized"
+        else:
+            await db.client.admin.command("ping")
+            checks["mongo"] = "connected"
+    except Exception:
+        checks["mongo"] = "error"
+    redis_client = get_redis()
+    if redis_client is None:
+        checks["redis"] = "not initialized"
+    else:
+        try:
+            await redis_client.ping()
+            checks["redis"] = "connected"
+        except Exception:
+            checks["redis"] = "error"
+    all_ok = all(v in ("connected",) for v in checks.values())
+    if not all_ok:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not ready", "checks": checks},
+        )
+    return {"status": "ok", "checks": checks}
 
 
 @app.get("/api/v1/health/db")
 async def health_db(session: SessionDep):
-    """Step 2: verify DB connection and session. Runs a simple query."""
+    """Verify PostgreSQL connection. Runs a simple query."""
     await session.execute(text("SELECT 1"))
     return {"status": "ok", "database": "connected"}
 
 
 @app.get("/api/v1/health/mongo")
 async def health_mongo():
-    """Day 4 Step 2: verify MongoDB connection."""
-    from app.core.mongo import get_database
+    """Verify MongoDB connection. Returns 503 if not initialized or ping fails."""
     db = get_database()
     if db is None:
         return JSONResponse(
