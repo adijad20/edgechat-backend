@@ -40,9 +40,14 @@ async def test_health_liveness(client: httpx.AsyncClient):
 async def test_health_ready(client: httpx.AsyncClient):
     """Readiness: all dependencies (DB, Mongo, Redis) are up."""
     r = await client.get("/api/v1/health/ready")
-    assert r.status_code == 200
     data = r.json()
+    checks = data.get("checks", {})
+    assert r.status_code == 200, (
+        f"health/ready returned {r.status_code}. checks={checks} "
+        "— ensure Postgres, Mongo, Redis are running (e.g. docker-compose up -d). "
+        "If Redis is on port 16379, set REDIS_URL=redis://localhost:16379/0 in .env.test"
+    )
     assert data.get("status") == "ok"
-    assert data.get("checks", {}).get("database") == "connected"
-    assert data.get("checks", {}).get("mongo") == "connected"
-    assert data.get("checks", {}).get("redis") == "connected"
+    assert checks.get("database") == "connected"
+    assert checks.get("mongo") == "connected"
+    assert checks.get("redis") == "connected"

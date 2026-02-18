@@ -17,9 +17,19 @@ _env_test = _project_root / ".env.test"
 if _env_test.exists():
     from dotenv import load_dotenv
     load_dotenv(_env_test)
-os.environ["DATABASE_URL"] = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
-os.environ["MONGODB_URL"] = "mongodb://localhost:27017"
-os.environ["REDIS_URL"] = "redis://localhost:16379/0"
+
+# CI: GitHub Actions sets GITHUB_ACTIONS=true; workflow runs Postgres/Mongo/Redis on 5432, 27017, 6379.
+# Local: docker-compose uses Redis on host 16379. We overwrite so .env never overrides test URLs.
+_in_ci = os.environ.get("GITHUB_ACTIONS") == "true" or os.environ.get("CI") == "true"
+if _in_ci:
+    os.environ["DATABASE_URL"] = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
+    os.environ["MONGODB_URL"] = "mongodb://localhost:27017"
+    os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+else:
+    os.environ["DATABASE_URL"] = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
+    os.environ["MONGODB_URL"] = "mongodb://localhost:27017"
+    os.environ["REDIS_URL"] = "redis://localhost:16379/0"
+
 os.environ.setdefault("JWT_SECRET", "test-secret-do-not-use-in-prod")
 os.environ.setdefault("GEMINI_API_KEY", "test-key")
 os.environ["RATE_LIMIT_REQUESTS"] = "10000"
