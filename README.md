@@ -125,7 +125,6 @@ API and docs are at http://localhost:8000 and http://localhost:8000/docs. The ap
 - **Structured errors:** All errors return JSON with `detail` and optional `request_id` for support.
 - **Health:** `/health` for liveness; `/health/ready` for readiness (all dependencies). Use in Kubernetes or load balancers.
 
-For more system-design context (scaling, mobile API, caching, security, observability), see [DAY6_SYSTEM_DESIGN.md](DAY6_SYSTEM_DESIGN.md).
 
 ---
 
@@ -139,6 +138,3 @@ Uses `.env.test` if present; see `tests/conftest.py` for fixtures and test DB.
 
 ---
 
-## License
-
-MIT (or your choice).

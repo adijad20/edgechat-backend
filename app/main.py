@@ -35,8 +35,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title=settings.APP_NAME,
-    description="Backend for mobile AI app: auth, chat, vision, summarization",
+    title="EdgeChat Backend",
+    description="Backend for AI app: auth, chat",
     version="0.1.0",
     lifespan=lifespan,
 )
@@ -95,7 +95,7 @@ def root():
     return {"status": "ok", "app": settings.APP_NAME}
 
 
-# --- Health (Day 6: liveness vs readiness) ---
+
 
 @app.get("/api/v1/health")
 def health_liveness():
